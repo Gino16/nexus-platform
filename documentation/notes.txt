@@ -1,0 +1,74 @@
+
+nexus/
+├── pom.xml
+├── mvnw
+├── mvnw.cmd
+├── .mvn/
+│
+├── services/
+│   ├── catalog-service/
+│   │   ├── pom.xml
+│   │   ├── Dockerfile
+│   │   └── src/
+│   │       ├── main/
+│   │       │   ├── java/io/nexus/catalog/
+│   │       │   │   ├── domain/
+│   │       │   │   │   ├── model/
+│   │       │   │   │   ├── service/
+│   │       │   │   │   └── port/
+│   │       │   │   ├── application/
+│   │       │   │   │   ├── usecase/
+│   │       │   │   │   └── dto/
+│   │       │   │   └── infrastructure/
+│   │       │   │       ├── adapter/
+│   │       │   │       │   ├── input/
+│   │       │   │       │   └── output/
+│   │       │   │       └── config/
+│   │       │   └── resources/
+│   │       └── test/
+│   │
+│   ├── order-service/
+│   │   ├── pom.xml
+│   │   └── src/
+│   │
+│   ├── inventory-service/
+│   │   ├── pom.xml
+│   │   └── src/
+│   │
+│   ├── payment-service/
+│   │   ├── pom.xml
+│   │   └── src/
+│   │
+│   └── notification-service/
+│       ├── pom.xml
+│       └── src/
+│
+├── contracts/
+│   ├── openapi/
+│   │   ├── catalog-api.yaml
+│   │   └── order-api.yaml
+│   └── asyncapi/
+│       └── commerce-events.yaml
+│
+├── identity/
+│   └── keycloak/
+│       ├── realm-export.json
+│       └── README.md
+│
+├── infrastructure/
+│   ├── docker/
+│   │   └── docker-compose.yml
+│   ├── kubernetes/
+│   ├── helm/
+│   └── monitoring/
+│
+├── documentation/
+│   ├── architecture/
+│   │   └── c4/
+│   ├── adr/
+│   ├── security/
+│   ├── runbooks/
+│   └── development/
+│
+└── .github/
+    └── workflows/
