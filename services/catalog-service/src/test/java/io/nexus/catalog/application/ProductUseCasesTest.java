@@ -1,9 +1,11 @@
 package io.nexus.catalog.application;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.nexus.catalog.application.port.out.ProductRepository;
 import io.nexus.catalog.application.usecase.CreateProductService;
@@ -11,83 +13,91 @@ import io.nexus.catalog.application.usecase.GetProductByIdService;
 import io.nexus.catalog.application.usecase.ListActiveProductsService;
 import io.nexus.catalog.domain.model.Product;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class ProductUseCasesTest {
+
+  @Mock
+  ProductRepository productRepository;
+
+  @InjectMocks
+  CreateProductService createProductService;
+  @InjectMocks
+  GetProductByIdService getProductByIdService;
+  @InjectMocks
+  ListActiveProductsService listActiveProductsService;
 
   @Test
   void createsAnActiveProductAndSavesIt() {
-    InMemoryProductRepository repository = new InMemoryProductRepository();
-    CreateProductService createProduct = new CreateProductService(repository);
+    // Arrange
+    when(productRepository.save(any(Product.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
 
-    Product created = createProduct.createProduct("Coffee", "Ground coffee", new BigDecimal("8.50"));
+    // Act
+    Product created = createProductService.createProduct(
+        "Coffee", "Ground coffee", new BigDecimal("8.50"));
 
+    // Assert
     assertNotNull(created.id());
     assertTrue(created.active());
     assertEquals("Coffee", created.name());
     assertEquals("Ground coffee", created.description());
     assertEquals(new BigDecimal("8.50"), created.price());
-    assertEquals(Optional.of(created), repository.findById(created.id()));
+    verify(productRepository).save(created);
   }
 
   @Test
   void returnsProductWhenItsIdExists() {
-    InMemoryProductRepository repository = new InMemoryProductRepository();
-    Product existing = product(true);
-    repository.save(existing);
-    GetProductByIdService getProduct = new GetProductByIdService(repository);
+    // Arrange
+    Product existing = sampleProduct();
+    when(productRepository.findById(existing.id())).thenReturn(Optional.of(existing));
 
-    assertEquals(Optional.of(existing), getProduct.getProductById(existing.id()));
+    // Act
+    Optional<Product> result = getProductByIdService.getProductById(existing.id());
+
+    // Assert
+    assertEquals(Optional.of(existing), result);
+    verify(productRepository).findById(existing.id());
   }
 
   @Test
   void returnsEmptyWhenProductIdDoesNotExist() {
-    GetProductByIdService getProduct = new GetProductByIdService(new InMemoryProductRepository());
+    // Arrange
+    UUID id = UUID.randomUUID();
+    when(productRepository.findById(id)).thenReturn(Optional.empty());
 
-    assertTrue(getProduct.getProductById(UUID.randomUUID()).isEmpty());
+    // Act
+    Optional<Product> result = getProductByIdService.getProductById(id);
+
+    // Assert
+    assertTrue(result.isEmpty());
+    verify(productRepository).findById(id);
   }
 
   @Test
-  void listsOnlyProductsReturnedByTheActiveProductRepositoryQuery() {
-    InMemoryProductRepository repository = new InMemoryProductRepository();
-    Product active = product(true);
-    Product inactive = product(false);
-    repository.save(active);
-    repository.save(inactive);
-    ListActiveProductsService listActiveProducts = new ListActiveProductsService(repository);
+  void listsProductsFromTheActiveProductQuery() {
+    // Arrange
+    List<Product> activeProducts = List.of(sampleProduct());
+    when(productRepository.findActiveProducts()).thenReturn(activeProducts);
 
-    List<Product> result = listActiveProducts.listActiveProducts();
+    // Act
+    List<Product> result = listActiveProductsService.listActiveProducts();
 
-    assertEquals(List.of(active), result);
-    assertFalse(result.contains(inactive));
+    // Assert
+    assertEquals(activeProducts, result);
+    verify(productRepository).findActiveProducts();
   }
 
-  private static Product product(boolean active) {
-    return new Product(UUID.randomUUID(), "Coffee", "Ground coffee", new BigDecimal("8.50"), active);
-  }
-
-  private static class InMemoryProductRepository implements ProductRepository {
-
-    private final List<Product> products = new ArrayList<>();
-
-    @Override
-    public Product save(Product product) {
-      products.add(product);
-      return product;
-    }
-
-    @Override
-    public Optional<Product> findById(UUID id) {
-      return products.stream().filter(product -> product.id().equals(id)).findFirst();
-    }
-
-    @Override
-    public List<Product> findActiveProducts() {
-      return products.stream().filter(Product::active).toList();
-    }
+  private static Product sampleProduct() {
+    return new Product(
+        UUID.randomUUID(), "Coffee", "Ground coffee", new BigDecimal("8.50"), true);
   }
 }
