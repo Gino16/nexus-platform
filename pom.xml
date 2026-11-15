@@ -29,15 +29,15 @@
       ${quarkus.version}
     </quarkus.platform.version>
 
-    <quarkus.version>3.40</quarkus.version>
+    <quarkus.version>3.40.1.2</quarkus.version>
   </properties>
 
   <modules>
     <module>services/catalog-service</module>
-    <module>services/order-service</module>
-    <module>services/inventory-service</module>
-    <module>services/payment-service</module>
-    <module>services/notification-service</module>
+<!--    <module>services/order-service</module>-->
+<!--    <module>services/inventory-service</module>-->
+<!--    <module>services/payment-service</module>-->
+<!--    <module>services/notification-service</module>-->
   </modules>
 
   <dependencyManagement>
