@@ -1,0 +1,24 @@
+quarkus:
+  datasource:
+    db-kind: postgresql
+  hibernate-orm:
+    schema-management:
+      strategy: validate
+  flyway:
+    migrate-at-start: true
+
+"%dev":
+  quarkus:
+    datasource:
+      username: ${DB_USERNAME:nexus}
+      password: ${DB_PASSWORD:nexus_local_only}
+      jdbc:
+        url: ${DB_URL:jdbc:postgresql://localhost:5432/nexus_catalog}
+
+"%prod":
+  quarkus:
+    datasource:
+      username: ${DB_USERNAME}
+      password: ${DB_PASSWORD}
+      jdbc:
+        url: ${DB_URL}
