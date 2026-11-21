@@ -1,0 +1,145 @@
+openapi: 3.0.3
+info:
+  title: NEXUS Catalog API
+  version: 1.0.0
+  description: Contract for creating, retrieving, and listing active catalog products.
+servers:
+  - url: /api/v1
+    description: NEXUS API v1
+tags:
+  - name: Products
+    description: Product catalog operations
+paths:
+  /products:
+    post:
+      tags:
+        - Products
+      operationId: createProduct
+      summary: Create a product
+      description: Creates a product in active status.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductRequest'
+      responses:
+        '201':
+          description: Product created
+          headers:
+            Location:
+              description: URL of the created product
+              schema:
+                type: string
+                format: uri-reference
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '400':
+          description: The request is invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      tags:
+        - Products
+      operationId: listActiveProducts
+      summary: List active products
+      responses:
+        '200':
+          description: Active products ordered by name
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductResponse'
+  /products/{productId}:
+    get:
+      tags:
+        - Products
+      operationId: getProductById
+      summary: Retrieve a product
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          description: Unique identifier of the product
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Product found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    CreateProductRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - description
+        - price
+      properties:
+        name:
+          type: string
+          minLength: 1
+          pattern: '\S'
+          description: Product name; must contain a non-whitespace character.
+        description:
+          type: string
+          description: Product description.
+        price:
+          type: number
+          minimum: 0
+          multipleOf: 0.01
+          description: Product price in PEN, with two decimal places.
+    ProductResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - name
+        - description
+        - price
+        - active
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          minimum: 0
+          multipleOf: 0.01
+          description: Product price in PEN, with two decimal places.
+        active:
+          type: boolean
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Stable error code for clients.
+        message:
+          type: string
+          description: Human-readable error detail.
