@@ -5,6 +5,7 @@ import io.nexus.catalog.domain.model.Product;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,6 +36,14 @@ public class PostgresProductRepository implements ProductRepository {
   @Override
   public List<Product> findActiveProducts() {
     return panacheRepository.findActiveProducts().stream()
+        .map(ProductPersistenceMapper::toDomain)
+        .toList();
+  }
+
+  @Override
+  public List<Product> findActiveProducts(String name, BigDecimal minPrice, BigDecimal maxPrice,
+      int offset, int limit) {
+    return panacheRepository.findActiveProducts(name, minPrice, maxPrice, offset, limit).stream()
         .map(ProductPersistenceMapper::toDomain)
         .toList();
   }

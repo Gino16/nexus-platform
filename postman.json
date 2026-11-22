@@ -1,0 +1,563 @@
+{
+  "info": {
+    "name": "NEXUS | Catálogo",
+    "description": "Colección para el catálogo local. Ejecuta en orden. Las dos primeras solicitudes crean productos con un prefijo único por ejecución para verificar filtros y paginación.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "productId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "missingProductId",
+      "value": "00000000-0000-4000-8000-000000000000",
+      "type": "string"
+    },
+    {
+      "key": "searchName",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "secondProductId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Crear producto",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set(\"searchName\", \"Nexus-\" + pm.variables.replaceIn(\"{{$guid}}\"));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+              "pm.collectionVariables.set(\"productId\", \"\");",
+              "if (pm.response.code === 201) {",
+              "    const product = pm.response.json();",
+              "    pm.test(\"El producto está activo y Location apunta a su ID\", function () {",
+              "        pm.expect(product.id).to.be.a(\"string\").and.not.be.empty;",
+              "        pm.expect(product.active).to.equal(true);",
+              "        pm.expect(pm.response.headers.get(\"Location\")).to.be.a(\"string\").and.include(\"/api/v1/products/\" + product.id);",
+              "    });",
+              "    if (product.id) pm.collectionVariables.set(\"productId\", product.id);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/products",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "products"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"{{searchName}} A\",\n  \"description\": \"Producto de prueba A\",\n  \"price\": 29.9\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "2. Crear segundo producto",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+              "pm.collectionVariables.set(\"secondProductId\", \"\");",
+              "if (pm.response.code === 201) {",
+              "    const product = pm.response.json();",
+              "    pm.test(\"El producto está activo y Location apunta a su ID\", function () {",
+              "        pm.expect(product.id).to.be.a(\"string\").and.not.be.empty;",
+              "        pm.expect(product.active).to.equal(true);",
+              "        pm.expect(pm.response.headers.get(\"Location\")).to.be.a(\"string\").and.include(\"/api/v1/products/\" + product.id);",
+              "    });",
+              "    if (product.id) pm.collectionVariables.set(\"secondProductId\", product.id);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/products",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "products"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"{{searchName}} B\",\n  \"description\": \"Producto de prueba B\",\n  \"price\": 39.9\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "3. Consultar el producto creado",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Devuelve el producto activo creado\", function () {",
+              "    const product = pm.response.json();",
+              "    pm.expect(product.id).to.equal(pm.collectionVariables.get(\"productId\"));",
+              "    pm.expect(product.active).to.equal(true);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/products/{{productId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "products",
+            "{{productId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "4. Filtrar por nombre y consultar la primera página",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Devuelve un producto activo con la paginación esperada\", function () {",
+              "    const products = pm.response.json();",
+              "    pm.expect(products).to.have.lengthOf(1);",
+              "    pm.expect(products[0].id).to.equal(pm.collectionVariables.get(\"productId\"));",
+              "    pm.expect(products[0].active).to.equal(true);",
+              "    pm.expect(pm.response.headers.get(\"X-Has-Next\")).to.equal(\"true\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/products?page=0&size=1&name={{searchName}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "products"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "0"
+            },
+            {
+              "key": "size",
+              "value": "1"
+            },
+            {
+              "key": "name",
+              "value": "{{searchName}}"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "5. Consultar la segunda página",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Devuelve un producto activo con la paginación esperada\", function () {",
+              "    const products = pm.response.json();",
+              "    pm.expect(products).to.have.lengthOf(1);",
+              "    pm.expect(products[0].id).to.equal(pm.collectionVariables.get(\"secondProductId\"));",
+              "    pm.expect(products[0].active).to.equal(true);",
+              "    pm.expect(pm.response.headers.get(\"X-Has-Next\")).to.equal(\"false\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/products?page=1&size=1&name={{searchName}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "products"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "size",
+              "value": "1"
+            },
+            {
+              "key": "name",
+              "value": "{{searchName}}"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "6. Combinar nombre y rango de precios",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Devuelve un producto activo con la paginación esperada\", function () {",
+              "    const products = pm.response.json();",
+              "    pm.expect(products).to.have.lengthOf(1);",
+              "    pm.expect(products[0].id).to.equal(pm.collectionVariables.get(\"productId\"));",
+              "    pm.expect(products[0].active).to.equal(true);",
+              "    pm.expect(pm.response.headers.get(\"X-Has-Next\")).to.equal(\"false\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/products?name={{searchName}}&minPrice=29.90&maxPrice=29.90",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "products"
+          ],
+          "query": [
+            {
+              "key": "name",
+              "value": "{{searchName}}"
+            },
+            {
+              "key": "minPrice",
+              "value": "29.90"
+            },
+            {
+              "key": "maxPrice",
+              "value": "29.90"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "7. Rechazar un rango de precios invertido",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });",
+              "pm.test(\"ErrorResponse describe la consulta inválida\", function () {",
+              "    const error = pm.response.json();",
+              "    pm.expect(error.code).to.equal(\"INVALID_PRODUCT_QUERY\");",
+              "    pm.expect(error.details).to.be.an(\"array\").and.not.be.empty;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/products?minPrice=50&maxPrice=10",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "products"
+          ],
+          "query": [
+            {
+              "key": "minPrice",
+              "value": "50"
+            },
+            {
+              "key": "maxPrice",
+              "value": "10"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "8. Rechazar un tamaño de página inválido",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });",
+              "pm.test(\"ErrorResponse describe la consulta inválida\", function () {",
+              "    const error = pm.response.json();",
+              "    pm.expect(error.code).to.equal(\"INVALID_PRODUCT_QUERY\");",
+              "    pm.expect(error.details).to.be.an(\"array\").and.not.be.empty;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/products?size=101",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "products"
+          ],
+          "query": [
+            {
+              "key": "size",
+              "value": "101"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "9. Crear producto con campos inválidos",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });",
+              "pm.test(\"ErrorResponse contiene detalles para name y price\", function () {",
+              "    const error = pm.response.json();",
+              "    pm.expect(error.code).to.equal(\"INVALID_PRODUCT\");",
+              "    pm.expect(error.message).to.be.a(\"string\").and.not.be.empty;",
+              "    pm.expect(error.details).to.be.an(\"array\");",
+              "    pm.expect(error.details.some(detail => detail.startsWith(\"name:\"))).to.equal(true);",
+              "    pm.expect(error.details.some(detail => detail.startsWith(\"price:\"))).to.equal(true);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/products",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "products"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"   \",\n  \"description\": \"Solicitud de prueba inválida\",\n  \"price\": -1\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "10. Consultar un producto inexistente",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });",
+              "pm.test(\"ErrorResponse indica que el producto no existe\", function () {",
+              "    const error = pm.response.json();",
+              "    pm.expect(error.code).to.equal(\"PRODUCT_NOT_FOUND\");",
+              "    pm.expect(error.message).to.be.a(\"string\").and.not.be.empty;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/products/{{missingProductId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "products",
+            "{{missingProductId}}"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

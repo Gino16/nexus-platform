@@ -27,7 +27,7 @@ The active service is `services/catalog-service`:
 - Maven uses OpenAPI Generator to generate a JAX-RS API interface and request/response DTOs into `target/generated-sources/openapi`; Build Helper adds those files to compilation.
 - Root Maven Wrapper files (`mvnw`, `mvnw.cmd`, `.mvn/wrapper/maven-wrapper.properties`) let the project build without a separately installed Maven.
 
-The generated `ProductsApi` is only the HTTP boundary. A handwritten REST adapter that implements it and maps between generated DTOs and application use cases is the next implementation step. Error-to-HTTP mapping should also be handled at that boundary.
+`ProductsResource` implements the generated `ProductsApi` and maps between the generated DTOs and the existing create, lookup, and list use cases. `CatalogUseCaseConfiguration` wires the use cases to the persistence port through CDI producers. The REST adapter exposes only active products on reads and uses `ApiExceptionMapper` to return the OpenAPI `ErrorResponse` for catalog errors.
 
 ## Useful commands
 
@@ -44,4 +44,4 @@ The first command generates the OpenAPI Java sources and compiles them. Do not c
 
 ## Resume prompt
 
-Open this repository in Codex and ask it to read `AGENTS.md`, `documentation/PROJECT_CONTEXT.md`, and the relevant ADRs. Continue by implementing the REST adapter for the generated catalog contract, preserving the existing application and persistence boundaries.
+Open this repository in Codex and ask it to read `AGENTS.md`, `documentation/PROJECT_CONTEXT.md`, and the relevant ADRs. The generated catalog contract is already wired to the existing use cases through `ProductsResource`. Preserve the existing application and persistence boundaries when extending the catalog.

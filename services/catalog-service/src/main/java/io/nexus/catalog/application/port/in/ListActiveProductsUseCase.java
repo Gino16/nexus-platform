@@ -6,4 +6,6 @@ import java.util.List;
 public interface ListActiveProductsUseCase {
 
   List<Product> listActiveProducts();
+
+  ProductPage listActiveProducts(ProductSearch search);
 }

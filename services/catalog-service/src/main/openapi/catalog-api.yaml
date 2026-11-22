@@ -47,21 +47,67 @@ paths:
         - Products
       operationId: listActiveProducts
       summary: List active products
+      parameters:
+        - name: page
+          in: query
+          description: Zero-based page index.
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+            maximum: 1000000
+        - name: size
+          in: query
+          description: Maximum number of products returned per page.
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: name
+          in: query
+          description: Case-insensitive substring of the product name.
+          schema:
+            type: string
+            maxLength: 100
+        - name: minPrice
+          in: query
+          description: Inclusive minimum price in PEN.
+          schema:
+            type: number
+            minimum: 0
+        - name: maxPrice
+          in: query
+          description: Inclusive maximum price in PEN.
+          schema:
+            type: number
+            minimum: 0
       responses:
         '200':
-          description: Active products ordered by name
+          description: Page of active products ordered by name and ID
+          headers:
+            X-Has-Next:
+              description: Whether another page of matching products exists
+              schema:
+                type: boolean
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/ProductResponse'
+        '400':
+          description: Invalid pagination parameters or price range
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /products/{productId}:
     get:
       tags:
         - Products
       operationId: getProductById
-      summary: Retrieve a product
+      summary: Retrieve an active product
       parameters:
         - name: productId
           in: path
@@ -78,7 +124,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ProductResponse'
         '404':
-          description: Product not found
+          description: No active product was found for the given ID
           content:
             application/json:
               schema:
@@ -96,7 +142,7 @@ components:
         name:
           type: string
           minLength: 1
-          pattern: '\S'
+          pattern: '[\s\S]*\S[\s\S]*'
           description: Product name; must contain a non-whitespace character.
         description:
           type: string
@@ -104,6 +150,7 @@ components:
         price:
           type: number
           minimum: 0
+          maximum: 99999999999999999.99
           multipleOf: 0.01
           description: Product price in PEN, with two decimal places.
     ProductResponse:
@@ -143,3 +190,8 @@ components:
         message:
           type: string
           description: Human-readable error detail.
+        details:
+          type: array
+          description: Individual client-facing errors associated with the request.
+          items:
+            type: string
