@@ -5,10 +5,12 @@ import io.nexus.catalog.application.port.in.GetProductByIdUseCase;
 import io.nexus.catalog.application.port.in.ListActiveProductsUseCase;
 import io.nexus.catalog.application.port.in.ProductPage;
 import io.nexus.catalog.application.port.in.ProductSearch;
+import io.nexus.catalog.application.port.in.UpdateProductByIdUseCase;
 import io.nexus.catalog.domain.model.Product;
 import io.nexus.catalog.infrastructure.adapter.in.rest.generated.api.ProductsApi;
 import io.nexus.catalog.infrastructure.adapter.in.rest.generated.model.CreateProductRequest;
 import io.nexus.catalog.infrastructure.adapter.in.rest.generated.model.ProductResponse;
+import io.nexus.catalog.infrastructure.adapter.in.rest.generated.model.UpdateProductRequest;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Context;
@@ -28,33 +30,31 @@ public class ProductsResource implements ProductsApi {
   private final CreateProductUseCase createProduct;
   private final GetProductByIdUseCase getProductById;
   private final ListActiveProductsUseCase listActiveProducts;
+  private final UpdateProductByIdUseCase updateProductByIdUseCase;
 
   @Context
   UriInfo uriInfo;
 
   @Inject
   public ProductsResource(CreateProductUseCase createProduct, GetProductByIdUseCase getProductById,
-      ListActiveProductsUseCase listActiveProducts) {
+      ListActiveProductsUseCase listActiveProducts,
+      UpdateProductByIdUseCase updateProductByIdUseCase) {
     this.createProduct = createProduct;
     this.getProductById = getProductById;
     this.listActiveProducts = listActiveProducts;
+    this.updateProductByIdUseCase = updateProductByIdUseCase;
   }
 
   @Override
   public RestResponse<ProductResponse> createProduct(CreateProductRequest request) {
-    if (request.getPrice().compareTo(MAX_PRICE) > 0) {
-      throw new ApiException(Status.BAD_REQUEST, "INVALID_PRODUCT",
-          "The product request contains invalid fields",
-          List.of("price: must not exceed " + MAX_PRICE), null);
-    }
+    validatePriceLimit(request.getPrice());
 
     Product product;
     try {
       product = createProduct.createProduct(request.getName(), request.getDescription(),
           request.getPrice());
     } catch (IllegalArgumentException exception) {
-      throw new ApiException(Status.BAD_REQUEST, "INVALID_PRODUCT",
-          "The product request contains invalid fields", List.of(exception.getMessage()), exception);
+      throw invalidProduct(exception.getMessage(), exception);
     }
 
     URI location = uriInfo.getAbsolutePathBuilder().path(product.id().toString()).build();
@@ -91,6 +91,33 @@ public class ProductsResource implements ProductsApi {
     return RestResponse.ResponseBuilder.ok(products)
         .header("X-Has-Next", Boolean.toString(result.hasNext()))
         .build();
+  }
+
+  @Override
+  public RestResponse<ProductResponse> updateProduct(UUID productId, UpdateProductRequest request) {
+    validatePriceLimit(request.getPrice());
+
+    Product updatedProduct;
+    try {
+      updatedProduct = updateProductByIdUseCase.updateProductById(productId, request.getName(),
+          request.getDescription(), request.getPrice(), request.getActive())
+          .orElseThrow(() -> new ApiException(Status.NOT_FOUND, "PRODUCT_NOT_FOUND",
+              "Product not found"));
+    } catch (IllegalArgumentException exception) {
+      throw invalidProduct(exception.getMessage(), exception);
+    }
+    return RestResponse.ok(toResponse(updatedProduct));
+  }
+
+  private static void validatePriceLimit(BigDecimal price) {
+    if (price.compareTo(MAX_PRICE) > 0) {
+      throw invalidProduct("price: must not exceed " + MAX_PRICE, null);
+    }
+  }
+
+  private static ApiException invalidProduct(String detail, Throwable cause) {
+    return new ApiException(Status.BAD_REQUEST, "INVALID_PRODUCT",
+        "The product request contains invalid fields", List.of(detail), cause);
   }
 
   private static ProductResponse toResponse(Product product) {

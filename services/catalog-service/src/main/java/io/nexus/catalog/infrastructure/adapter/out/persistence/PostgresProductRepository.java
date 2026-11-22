@@ -47,4 +47,11 @@ public class PostgresProductRepository implements ProductRepository {
         .map(ProductPersistenceMapper::toDomain)
         .toList();
   }
+
+  @Override
+  @Transactional
+  public boolean update(Product product) {
+    return panacheRepository.update("name = ?1, description = ?2, price = ?3, active = ?4 where id = ?5",
+        product.name(), product.description(), product.price(), product.active(), product.id()) == 1;
+  }
 }

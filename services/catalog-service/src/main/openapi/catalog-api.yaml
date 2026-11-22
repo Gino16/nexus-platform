@@ -129,6 +129,45 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+        - Products
+      operationId: updateProduct
+      summary: Update a product
+      description: Updates the name, description, price, and active status of an existing product.
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          description: Unique identifier of the product
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProductRequest'
+      responses:
+        '200':
+          description: Product updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+        '400':
+          description: The request is invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: No product was found for the given ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     CreateProductRequest:
@@ -177,6 +216,32 @@ components:
           description: Product price in PEN, with two decimal places.
         active:
           type: boolean
+    UpdateProductRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - description
+        - price
+        - active
+      properties:
+        name:
+          type: string
+          minLength: 1
+          pattern: '[\s\S]*\S[\s\S]*'
+          description: Product name; must contain a non-whitespace character.
+        description:
+          type: string
+          description: Product description.
+        price:
+          type: number
+          minimum: 0
+          maximum: 99999999999999999.99
+          multipleOf: 0.01
+          description: Product price in PEN, with two decimal places.
+        active:
+          type: boolean
+          description: Whether the product is visible in public catalog reads.
     ErrorResponse:
       type: object
       additionalProperties: false

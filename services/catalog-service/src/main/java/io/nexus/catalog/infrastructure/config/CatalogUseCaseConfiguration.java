@@ -3,10 +3,12 @@ package io.nexus.catalog.infrastructure.config;
 import io.nexus.catalog.application.port.in.CreateProductUseCase;
 import io.nexus.catalog.application.port.in.GetProductByIdUseCase;
 import io.nexus.catalog.application.port.in.ListActiveProductsUseCase;
+import io.nexus.catalog.application.port.in.UpdateProductByIdUseCase;
 import io.nexus.catalog.application.port.out.ProductRepository;
 import io.nexus.catalog.application.usecase.CreateProductService;
 import io.nexus.catalog.application.usecase.GetProductByIdService;
 import io.nexus.catalog.application.usecase.ListActiveProductsService;
+import io.nexus.catalog.application.usecase.UpdateProductByIdService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 
@@ -29,5 +31,11 @@ public class CatalogUseCaseConfiguration {
   @ApplicationScoped
   ListActiveProductsUseCase listActiveProductsUseCase(ProductRepository repository) {
     return new ListActiveProductsService(repository);
+  }
+
+  @Produces
+  @ApplicationScoped
+  UpdateProductByIdUseCase updateProductByIdUseCase(ProductRepository repository) {
+    return new UpdateProductByIdService(repository);
   }
 }

@@ -16,4 +16,6 @@ public interface ProductRepository {
 
   List<Product> findActiveProducts(String name, BigDecimal minPrice, BigDecimal maxPrice,
       int offset, int limit);
+
+  boolean update(Product product);
 }

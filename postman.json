@@ -558,6 +558,515 @@
         }
       },
       "response": []
+    },
+    {
+      "name": "11. Actualizar el producto",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"El producto contiene los datos actualizados\", function () {",
+              "    const product = pm.response.json();",
+              "    pm.expect(product.id).to.equal(pm.collectionVariables.get(\"productId\"));",
+              "    pm.expect(product.name).to.equal(pm.collectionVariables.get(\"searchName\") + \" Actualizado\");",
+              "    pm.expect(product.description).to.equal(\"Descripción actualizada\");",
+              "    pm.expect(product.price).to.equal(49.95);",
+              "    pm.expect(product.active).to.equal(true);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/products/{{productId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "products",
+            "{{productId}}"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"{{searchName}} Actualizado\",\n  \"description\": \"Descripción actualizada\",\n  \"price\": 49.95,\n  \"active\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "12. Confirmar que se guardaron los cambios",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"El producto contiene los datos actualizados\", function () {",
+              "    const product = pm.response.json();",
+              "    pm.expect(product.id).to.equal(pm.collectionVariables.get(\"productId\"));",
+              "    pm.expect(product.name).to.equal(pm.collectionVariables.get(\"searchName\") + \" Actualizado\");",
+              "    pm.expect(product.description).to.equal(\"Descripción actualizada\");",
+              "    pm.expect(product.price).to.equal(49.95);",
+              "    pm.expect(product.active).to.equal(true);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/products/{{productId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "products",
+            "{{productId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "13. Rechazar un estado activo omitido",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });",
+              "pm.test(\"La respuesta usa el formato ErrorResponse\", function () {",
+              "    const error = pm.response.json();",
+              "    pm.expect(error.code).to.equal(\"INVALID_PRODUCT\");",
+              "    pm.expect(error.message).to.be.a(\"string\").and.not.be.empty;",
+              "    pm.expect(error.details.some(detail => detail.startsWith(\"active:\"))).to.equal(true);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/products/{{productId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "products",
+            "{{productId}}"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"{{searchName}} Actualizado\",\n  \"description\": \"Descripción actualizada\",\n  \"price\": 49.95\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "14. Rechazar un precio con más de dos decimales",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", function () { pm.response.to.have.status(400); });",
+              "pm.test(\"La respuesta usa el formato ErrorResponse\", function () {",
+              "    const error = pm.response.json();",
+              "    pm.expect(error.code).to.equal(\"INVALID_PRODUCT\");",
+              "    pm.expect(error.message).to.be.a(\"string\").and.not.be.empty;",
+              "    pm.expect(error.details.some(detail => detail.startsWith(\"price\"))).to.equal(true);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/products/{{productId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "products",
+            "{{productId}}"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"{{searchName}} Actualizado\",\n  \"description\": \"Descripción actualizada\",\n  \"price\": 49.951,\n  \"active\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "15. Actualizar un producto inexistente",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });",
+              "pm.test(\"La respuesta usa el formato ErrorResponse\", function () {",
+              "    const error = pm.response.json();",
+              "    pm.expect(error.code).to.equal(\"PRODUCT_NOT_FOUND\");",
+              "    pm.expect(error.message).to.be.a(\"string\").and.not.be.empty;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/products/{{missingProductId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "products",
+            "{{missingProductId}}"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"{{searchName}} Actualizado\",\n  \"description\": \"Descripción actualizada\",\n  \"price\": 49.95,\n  \"active\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "16. Desactivar el producto",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"El producto contiene los datos actualizados\", function () {",
+              "    const product = pm.response.json();",
+              "    pm.expect(product.id).to.equal(pm.collectionVariables.get(\"productId\"));",
+              "    pm.expect(product.name).to.equal(pm.collectionVariables.get(\"searchName\") + \" Actualizado\");",
+              "    pm.expect(product.description).to.equal(\"Descripción actualizada\");",
+              "    pm.expect(product.price).to.equal(49.95);",
+              "    pm.expect(product.active).to.equal(false);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/products/{{productId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "products",
+            "{{productId}}"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"{{searchName}} Actualizado\",\n  \"description\": \"Descripción actualizada\",\n  \"price\": 49.95,\n  \"active\": false\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "17. Consultar el producto desactivado",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", function () { pm.response.to.have.status(404); });",
+              "pm.test(\"La respuesta usa el formato ErrorResponse\", function () {",
+              "    const error = pm.response.json();",
+              "    pm.expect(error.code).to.equal(\"PRODUCT_NOT_FOUND\");",
+              "    pm.expect(error.message).to.be.a(\"string\").and.not.be.empty;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/products/{{productId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "products",
+            "{{productId}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "18. Comprobar que el producto desactivado no se lista",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"Solo aparece el segundo producto de esta ejecución\", function () {",
+              "    const products = pm.response.json();",
+              "    pm.expect(products.map(product => product.id)).to.deep.equal([pm.collectionVariables.get(\"secondProductId\")]);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/products?name={{searchName}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "products"
+          ],
+          "query": [
+            {
+              "key": "name",
+              "value": "{{searchName}}"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "19. Reactivar el producto",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"El producto contiene los datos actualizados\", function () {",
+              "    const product = pm.response.json();",
+              "    pm.expect(product.id).to.equal(pm.collectionVariables.get(\"productId\"));",
+              "    pm.expect(product.name).to.equal(pm.collectionVariables.get(\"searchName\") + \" Actualizado\");",
+              "    pm.expect(product.description).to.equal(\"Descripción actualizada\");",
+              "    pm.expect(product.price).to.equal(49.95);",
+              "    pm.expect(product.active).to.equal(true);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/products/{{productId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "products",
+            "{{productId}}"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"{{searchName}} Actualizado\",\n  \"description\": \"Descripción actualizada\",\n  \"price\": 49.95,\n  \"active\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "20. Consultar el producto reactivado",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+              "pm.test(\"El producto contiene los datos actualizados\", function () {",
+              "    const product = pm.response.json();",
+              "    pm.expect(product.id).to.equal(pm.collectionVariables.get(\"productId\"));",
+              "    pm.expect(product.name).to.equal(pm.collectionVariables.get(\"searchName\") + \" Actualizado\");",
+              "    pm.expect(product.description).to.equal(\"Descripción actualizada\");",
+              "    pm.expect(product.price).to.equal(49.95);",
+              "    pm.expect(product.active).to.equal(true);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/products/{{productId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "products",
+            "{{productId}}"
+          ]
+        }
+      },
+      "response": []
     }
   ]
 }
