@@ -7,8 +7,8 @@ being added incrementally; PostgreSQL is the first service.
 
 From the repository root, copy the sample environment file and start the database:
 
-```powershell
-Copy-Item devops/.env.example .env
+```bash
+cp devops/.env.example .env
 docker compose -f devops/compose.yaml up -d
 ```
 
@@ -23,8 +23,8 @@ environments. The `.env` file is ignored by Git.
 
 After PostgreSQL is healthy, run the service in dev mode from the repository root:
 
-```powershell
-.\services\catalog-service\mvnw.cmd -f services/catalog-service/pom.xml quarkus:dev
+```bash
+./mvnw -pl services/catalog-service quarkus:dev
 ```
 
 Flyway applies versioned migrations from `src/main/resources/db/migration` at startup.
