@@ -1,7 +1,6 @@
 # Local development infrastructure
 
-This directory contains the Docker Compose definitions for local dependencies. The stack is
-being added incrementally; PostgreSQL is the first service.
+This directory contains the Docker Compose definitions for the local catalog and inventory databases.
 
 ## Start PostgreSQL
 
@@ -12,9 +11,9 @@ cp devops/.env.example .env
 docker compose -f devops/compose.yaml up -d
 ```
 
-The database listens on `localhost:5432` and stores data in the named
-`catalog-postgres-data` volume. Compose waits for PostgreSQL readiness before reporting the
-container as healthy.
+Catalog PostgreSQL listens on `localhost:5432` and uses the `catalog-postgres-data` volume.
+Inventory PostgreSQL listens on `localhost:5433` and uses the `inventory-postgres-data` volume.
+Each database has its own readiness check.
 
 The sample credentials are for local development only. Do not reuse them in deployed
 environments. The `.env` file is ignored by Git.
@@ -28,3 +27,18 @@ After PostgreSQL is healthy, run the service in dev mode from the repository roo
 ```
 
 Flyway applies versioned migrations from `src/main/resources/db/migration` at startup.
+
+
+## Run the inventory service
+
+From the repository root:
+
+```bash
+docker compose -f devops/compose.yaml up -d --wait inventory-postgres
+./mvnw -pl services/inventory-service quarkus:dev
+```
+
+The inventory API listens on `http://localhost:8081/api/v1`. Flyway creates the inventory tables at startup.
+If you change the database port, name, or credentials, set `INVENTORY_DB_URL`, `INVENTORY_DB_USERNAME`,
+and `INVENTORY_DB_PASSWORD` in the environment used to start Quarkus.
+See the [inventory service README](../services/inventory-service/README.md) for the reservation flow.

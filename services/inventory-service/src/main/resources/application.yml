@@ -1,0 +1,26 @@
+quarkus:
+  http:
+    port: ${INVENTORY_HTTP_PORT:8081}
+  datasource:
+    db-kind: postgresql
+  hibernate-orm:
+    schema-management:
+      strategy: validate
+  flyway:
+    migrate-at-start: true
+
+"%dev":
+  quarkus:
+    datasource:
+      username: ${INVENTORY_DB_USERNAME:nexus}
+      password: ${INVENTORY_DB_PASSWORD:nexus_inventory_local_only}
+      jdbc:
+        url: ${INVENTORY_DB_URL:jdbc:postgresql://localhost:5433/nexus_inventory}
+
+"%prod":
+  quarkus:
+    datasource:
+      username: ${INVENTORY_DB_USERNAME}
+      password: ${INVENTORY_DB_PASSWORD}
+      jdbc:
+        url: ${INVENTORY_DB_URL}

@@ -1,0 +1,278 @@
+openapi: 3.0.3
+info:
+  title: NEXUS Inventory API
+  version: 1.0.0
+servers:
+  - url: /api/v1
+tags:
+  - name: Inventory
+paths:
+  /stocks:
+    post:
+      tags: [Inventory]
+      operationId: registerStock
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterStockRequest' }
+      responses:
+        '201':
+          description: Operation completed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StockResponse' }
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '409':
+          description: Insufficient stock or conflicting inventory state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+  /stocks/{productId}:
+    get:
+      tags: [Inventory]
+      operationId: getStock
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Operation completed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StockResponse' }
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404':
+          description: Stock or reservation not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+  /stocks/{productId}/adjustments:
+    post:
+      tags: [Inventory]
+      operationId: adjustStock
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdjustStockRequest' }
+      responses:
+        '200':
+          description: Operation completed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StockResponse' }
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404':
+          description: Stock or reservation not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '409':
+          description: Insufficient stock or conflicting inventory state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+  /reservations/{orderId}:
+    put:
+      tags: [Inventory]
+      operationId: reserveStock
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReserveStockRequest' }
+      responses:
+        '200':
+          description: Operation completed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReservationResponse' }
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404':
+          description: Stock or reservation not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '409':
+          description: Insufficient stock or conflicting inventory state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+    get:
+      tags: [Inventory]
+      operationId: getReservation
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Operation completed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReservationResponse' }
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404':
+          description: Stock or reservation not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+  /reservations/{orderId}/release:
+    put:
+      tags: [Inventory]
+      operationId: releaseReservation
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Operation completed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReservationResponse' }
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404':
+          description: Stock or reservation not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '409':
+          description: Insufficient stock or conflicting inventory state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+  /reservations/{orderId}/confirm:
+    put:
+      tags: [Inventory]
+      operationId: confirmReservation
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Operation completed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReservationResponse' }
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '404':
+          description: Stock or reservation not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+        '409':
+          description: Insufficient stock or conflicting inventory state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+components:
+  schemas:
+    RegisterStockRequest:
+      type: object
+      required: [productId, quantity]
+      properties:
+        productId: { type: string, format: uuid }
+        quantity: { type: integer, minimum: 0 }
+    AdjustStockRequest:
+      type: object
+      required: [delta]
+      properties:
+        delta:
+          type: integer
+          description: Nonzero change to available stock. Negative values remove stock.
+    StockResponse:
+      type: object
+      required: [productId, available, reserved]
+      properties:
+        productId: { type: string, format: uuid }
+        available: { type: integer, minimum: 0 }
+        reserved: { type: integer, minimum: 0 }
+    ReservationLine:
+      type: object
+      required: [productId, quantity]
+      properties:
+        productId: { type: string, format: uuid }
+        quantity: { type: integer, minimum: 1 }
+    ReserveStockRequest:
+      type: object
+      required: [lines]
+      properties:
+        lines:
+          type: array
+          minItems: 1
+          maxItems: 100
+          description: Each product may appear once. Retrying the same order and lines returns its current reservation.
+          items: { $ref: '#/components/schemas/ReservationLine' }
+    ReservationResponse:
+      type: object
+      required: [orderId, status, lines]
+      properties:
+        orderId: { type: string, format: uuid }
+        status: { type: string, enum: [RESERVED, RELEASED, CONFIRMED] }
+        lines:
+          type: array
+          items: { $ref: '#/components/schemas/ReservationLine' }
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Stable error code for clients.
+        message:
+          type: string
+          description: Human-readable error detail.
+        details:
+          type: array
+          description: Individual client-facing errors associated with the request.
+          items:
+            type: string
