@@ -1,0 +1,38 @@
+asyncapi: 3.0.0
+info:
+  title: NEXUS simulated payments
+  version: 1.0.0
+channels:
+  paymentRequests:
+    address: nexus.payments.requests.v1
+    messages:
+      PaymentRequested:
+        payload:
+          type: object
+          required: [orderId, amount, currency, requestedOutcome, schemaVersion]
+          properties:
+            orderId: { type: string, format: uuid }
+            amount: { type: number, minimum: 0, multipleOf: 0.01 }
+            currency: { type: string, enum: [PEN] }
+            requestedOutcome: { type: string, enum: [APPROVED, DECLINED] }
+            schemaVersion: { type: integer, enum: [1] }
+  paymentResults:
+    address: nexus.payments.results.v1
+    messages:
+      PaymentResult:
+        payload:
+          type: object
+          required: [orderId, amount, currency, outcome, schemaVersion]
+          properties:
+            orderId: { type: string, format: uuid }
+            amount: { type: number, minimum: 0, multipleOf: 0.01 }
+            currency: { type: string, enum: [PEN] }
+            outcome: { type: string, enum: [APPROVED, DECLINED] }
+            schemaVersion: { type: integer, enum: [1] }
+operations:
+  requestAuthorization:
+    action: send
+    channel: { $ref: '#/channels/paymentRequests' }
+  receiveAuthorization:
+    action: receive
+    channel: { $ref: '#/channels/paymentResults' }

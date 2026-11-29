@@ -1,0 +1,61 @@
+quarkus:
+  datasource:
+    db-kind: postgresql
+    username: ${PAYMENT_DB_USERNAME:nexus}
+    password: ${PAYMENT_DB_PASSWORD:nexus_payment_local_only}
+    jdbc:
+      url: ${PAYMENT_DB_URL:jdbc:postgresql://localhost:5435/nexus_payment}
+  flyway:
+    migrate-at-start: true
+  hibernate-orm:
+    schema-management:
+      strategy: validate
+
+kafka:
+  bootstrap:
+    servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+mp:
+  messaging:
+    outgoing:
+      payment-results-out:
+        connector: smallrye-kafka
+        topic: ${PAYMENT_RESULTS_TOPIC:nexus.payments.results.v1}
+        key:
+          serializer: org.apache.kafka.common.serialization.StringSerializer
+        value:
+          serializer: org.apache.kafka.common.serialization.StringSerializer
+        acks: all
+        enable:
+          idempotence: true
+        waitForWriteCompletion: true
+        max:
+          block:
+            ms: 5000
+        request:
+          timeout:
+            ms: 5000
+        delivery:
+          timeout:
+            ms: 7000
+    incoming:
+      payment-requests-in:
+        connector: smallrye-kafka
+        topic: ${PAYMENT_REQUESTS_TOPIC:nexus.payments.requests.v1}
+        failure-strategy: delayed-retry-topic
+        delayed-retry-topic:
+          max-retries: 3
+        dead-letter-queue:
+          topic: ${PAYMENT_REQUESTS_TOPIC:nexus.payments.requests.v1}.dead-letter
+        group:
+          id: ${PAYMENT_REQUESTS_GROUP:nexus-payment-authorizations}
+        auto:
+          offset:
+            reset: earliest
+        allow:
+          auto:
+            create:
+              topics: true
+        key:
+          deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        value:
+          deserializer: org.apache.kafka.common.serialization.StringDeserializer

@@ -1,41 +1,44 @@
-```mermaid
+# Order flow
 
+Orders snapshots catalog prices over HTTP. Inventory commands also use HTTP, while payment
+authorization and terminal notifications use Kafka. Pending outbox records are retried after a
+broker outage. The payment service stores one simulated authorization per order in its own database.
+
+```mermaid
 sequenceDiagram
     autonumber
-
     actor Customer
-    participant Gateway as API Gateway
-    participant Order as Order Service
-    participant DB as Order DB
+    participant Catalog
+    participant Orders
+    participant Inventory
     participant Kafka
-    participant Inventory as Inventory Service
-    participant Payment as Payment Service
-    participant Provider as Payment Provider
+    participant Payment
+    participant Notifications
 
-    Customer->>Gateway: POST /orders (JWT)
-    Gateway->>Order: Create Order
-    Order->>DB: Save PENDING + Outbox
-    DB-->>Order: Commit
-    Order-->>Customer: 202 Accepted
+    Customer->>Orders: PUT /api/v1/orders/{orderId}
+    Orders->>Catalog: Read active products and prices
+    Orders-->>Customer: 202 Accepted
+    Orders->>Inventory: Reserve every order line
 
-    Note over DB,Kafka: Outbox Publisher
+    alt Inventory unavailable
+        Orders->>Orders: Save REJECTED and terminal outbox event
+    else Inventory reserved
+        Orders->>Orders: Save payment request in outbox
+        Orders->>Kafka: PaymentRequested
+        Kafka->>Payment: Payment request
+        Payment->>Payment: Persist simulated authorization
+        Payment->>Kafka: Authorization result
+        Kafka->>Orders: Payment result
+        alt Approved
+            Orders->>Inventory: Confirm reservation
+            Orders->>Orders: Save CONFIRMED and terminal outbox event
+        else Declined
+            Orders->>Inventory: Release reservation
+            Orders->>Orders: Save REJECTED and terminal outbox event
+        end
+    end
 
-    DB->>Kafka: OrderCreated
-
-    Kafka->>Inventory: OrderCreated
-    Inventory->>Inventory: Reserve stock
-    Inventory->>Kafka: InventoryReserved
-
-    Kafka->>Order: InventoryReserved
-    Order->>Kafka: PaymentRequested
-
-    Kafka->>Payment: PaymentRequested
-    Payment->>Provider: Authorize payment
-    Provider-->>Payment: Payment result
-    Payment->>Kafka: PaymentAuthorized
-
-    Kafka->>Order: PaymentAuthorized
-    Order->>DB: Update CONFIRMED
-    Order->>Kafka: OrderConfirmed
-
+    Orders->>Kafka: OrderConfirmed or OrderRejected
+    Kafka->>Notifications: Record terminal event in application log
+    Customer->>Orders: GET /api/v1/orders/{orderId}
 ```

@@ -1,0 +1,103 @@
+quarkus:
+  http:
+    host: ${ORDER_HTTP_HOST:127.0.0.1}
+    port: ${ORDER_HTTP_PORT:8082}
+  datasource:
+    db-kind: postgresql
+    username: ${ORDER_DB_USERNAME:nexus}
+    password: ${ORDER_DB_PASSWORD:nexus_order_local_only}
+    jdbc:
+      url: ${ORDER_DB_URL:jdbc:postgresql://localhost:5434/nexus_order}
+  flyway:
+    migrate-at-start: true
+  hibernate-orm:
+    schema-management:
+      strategy: validate
+nexus:
+  catalog-url: ${CATALOG_URL:http://localhost:8080/api/v1}
+  inventory-url: ${INVENTORY_URL:http://localhost:8081/api/v1}
+
+kafka:
+  bootstrap:
+    servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+mp:
+  messaging:
+    outgoing:
+      order-events-out:
+        connector: smallrye-kafka
+        topic: ${ORDER_EVENTS_TOPIC:nexus.orders.events.v1}
+        key:
+          serializer: org.apache.kafka.common.serialization.StringSerializer
+        value:
+          serializer: org.apache.kafka.common.serialization.StringSerializer
+        acks: all
+        enable:
+          idempotence: true
+        waitForWriteCompletion: true
+        max:
+          block:
+            ms: 5000
+        request:
+          timeout:
+            ms: 5000
+        delivery:
+          timeout:
+            ms: 7000
+      payment-requests-out:
+        connector: smallrye-kafka
+        topic: ${PAYMENT_REQUESTS_TOPIC:nexus.payments.requests.v1}
+        key:
+          serializer: org.apache.kafka.common.serialization.StringSerializer
+        value:
+          serializer: org.apache.kafka.common.serialization.StringSerializer
+        acks: all
+        enable:
+          idempotence: true
+        waitForWriteCompletion: true
+        max:
+          block:
+            ms: 5000
+        request:
+          timeout:
+            ms: 5000
+        delivery:
+          timeout:
+            ms: 7000
+    incoming:
+      order-notifications-in:
+        connector: smallrye-kafka
+        topic: ${ORDER_EVENTS_TOPIC:nexus.orders.events.v1}
+        group:
+          id: ${ORDER_NOTIFICATIONS_GROUP:nexus-order-notifications}
+        auto:
+          offset:
+            reset: earliest
+        allow:
+          auto:
+            create:
+              topics: true
+        key:
+          deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        value:
+          deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      payment-results-in:
+        connector: smallrye-kafka
+        topic: ${PAYMENT_RESULTS_TOPIC:nexus.payments.results.v1}
+        failure-strategy: delayed-retry-topic
+        delayed-retry-topic:
+          max-retries: 3
+        dead-letter-queue:
+          topic: ${PAYMENT_RESULTS_TOPIC:nexus.payments.results.v1}.dead-letter
+        group:
+          id: ${ORDER_PAYMENT_RESULTS_GROUP:nexus-order-payment-results}
+        auto:
+          offset:
+            reset: earliest
+        allow:
+          auto:
+            create:
+              topics: true
+        key:
+          deserializer: org.apache.kafka.common.serialization.StringDeserializer
+        value:
+          deserializer: org.apache.kafka.common.serialization.StringDeserializer

@@ -27,3 +27,14 @@ A retry with the same order ID and product quantities returns the existing reser
 of line order. Repeating a release or confirmation returns the current state. A different set of
 lines or a conflicting transition returns `409`. If any line is missing stock or requests more than
 is available, the entire reservation rolls back.
+
+## Integration tests
+
+With inventory and PostgreSQL running locally, execute from the repository root:
+
+```bash
+python3 services/inventory-service/src/test/integration/test_inventory.py
+```
+
+Set `INVENTORY_BASE_URL` if the API runs at a different address. The scenarios use fresh UUIDs
+and leave their stock and reservation records in the database. Run them against a local test database.

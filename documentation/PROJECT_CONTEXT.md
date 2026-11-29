@@ -34,8 +34,16 @@ NEXUS is an educational portfolio project demonstrating a cloud-native commerce 
 `services/inventory-service` registers, reads, and adjusts stock. It can reserve all lines of an order
 atomically and release or confirm the reservation. Reservations are keyed by order ID so retries do
 not change stock twice. The service runs locally on port 8081 and uses its own PostgreSQL database
-on port 5433. Order, payment, and event integration are pending.
+on port 5433. Catalog prices and inventory reservations are integrated with the local order flow.
 See the [inventory service README](../services/inventory-service/README.md).
+
+### Order service
+
+`services/order-service` stores price snapshots and coordinates inventory and simulated payment.
+A background worker advances persisted orders and records terminal events in a transactional outbox.
+The outbox publisher sends them to Kafka, and a notification consumer logs the terminal events. Follow the
+[order service README](../services/order-service/README.md) to run the checkout integration tests.
+The checkout uses HTTP for catalog and inventory. A standalone payment service communicates with orders over Kafka and owns its authorization database. Keycloak and authorization remain pending.
 
 ## Useful commands
 
